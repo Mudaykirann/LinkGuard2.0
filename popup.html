@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LinkGuard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --green-bg: #0f2d16;
+      --red: #d73a49;
+      --red-bg: #2d0f14;
+      --yellow: #d29922;
+      --yellow-bg: #2d2000;
+      --blue: #58a6ff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 360px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 18px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      background: radial-gradient(circle, rgba(215,58,73,0.1) 0%, transparent 70%);
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-shield {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #1a0a0d, #2d1018);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(215,58,73,0.2);
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span { color: var(--red); }
+
+    .version-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    /* ── Scan result banner ── */
+    .scan-banner {
+      margin: 14px 16px 0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid;
+    }
+
+    .scan-banner.safe {
+      background: var(--green-bg);
+      border-color: #1e5128;
+    }
+
+    .scan-banner.threat {
+      background: var(--red-bg);
+      border-color: #5a1a22;
+    }
+
+    .scan-banner.unknown {
+      background: var(--bg3);
+      border-color: var(--border);
+    }
+
+    .scan-banner.no-key {
+      background: var(--yellow-bg);
+      border-color: #5a4200;
+    }
+
+    .banner-icon { font-size: 24px; flex-shrink: 0; }
+
+    .banner-text { flex: 1; }
+
+    .banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .banner-title.safe { color: var(--green); }
+    .banner-title.threat { color: var(--red); }
+    .banner-title.unknown { color: var(--muted); }
+    .banner-title.no-key { color: var(--yellow); }
+
+    .banner-sub {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px 0;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .stat-num.green { color: var(--green); }
+    .stat-num.red { color: var(--red); }
+    .stat-num.blue { color: var(--blue); }
+
+    .stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* ── Threat list ── */
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      padding: 14px 16px 6px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .threat-list {
+      padding: 0 12px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .threat-list::-webkit-scrollbar { width: 3px; }
+    .threat-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .threat-item {
+      background: var(--bg2);
+      border: 1px solid #3a1820;
+      border-left: 3px solid var(--red);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+
+    .threat-item-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #e6edf3;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+
+    .threat-item-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(215,58,73,0.15);
+      border: 1px solid rgba(215,58,73,0.3);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 10px;
+      color: var(--red);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .no-threats {
+      padding: 8px 12px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── API key section ── */
+    .api-section {
+      padding: 0 16px 16px;
+      margin-top: 4px;
+    }
+
+    .api-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+
+    .api-input-row {
+      display: flex;
+      gap: 7px;
+    }
+
+    .api-input {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .api-input:focus { border-color: var(--blue); }
+    .api-input::placeholder { color: #444; }
+
+    .btn-save {
+      background: linear-gradient(135deg, #1a4a2a, #238636);
+      border: 1px solid #2ea043;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-save:hover { opacity: 0.85; }
+
+    .api-hint {
+      font-size: 10px;
+      color: #444;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .api-hint a { color: var(--blue); text-decoration: none; }
+
+    .save-msg {
+      font-size: 11px;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 14px;
+    }
+
+    .save-msg.ok { color: var(--green); }
+    .save-msg.err { color: var(--red); }
+
+    /* ── Rescan btn ── */
+    .rescan-row {
+      padding: 0 16px 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-rescan {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .btn-rescan:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: auto;
+      padding: 8px 16px;
+      border-top: 1px solid #1a1f26;
+      background: #0a0d12;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #333;
+    }
+
+    .powered-by {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #333;
+    }
+
+    .powered-by span { color: #3c6b9e; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo">
+        <div class="logo-shield">🛡</div>
+        <div class="logo-text">Link<span>Guard</span></div>
+      </div>
+      <div class="version-tag">v1.0</div>
+    </div>
+  </div>
+
+  <!-- Scan result banner -->
+  <div class="scan-banner unknown" id="scanBanner">
+    <div class="banner-icon" id="bannerIcon">🔍</div>
+    <div class="banner-text">
+      <div class="banner-title unknown" id="bannerTitle">Loading scan results…</div>
+      <div class="banner-sub" id="bannerSub">Checking current page</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num blue" id="statLinks">—</div>
+      <div class="stat-label">Links Scanned</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num red" id="statThreats">—</div>
+      <div class="stat-label">Threats Found</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num green" id="statSafe">—</div>
+      <div class="stat-label">Safe Links</div>
+    </div>
+  </div>
+
+  <!-- Threat list -->
+  <div class="section-title" id="threatSectionTitle">Detected Threats</div>
+  <div class="threat-list" id="threatList">
+    <div class="no-threats">No threats detected on this page.</div>
+  </div>
+
+  <!-- Rescan -->
+  <div class="rescan-row">
+    <button class="btn-rescan" id="rescanBtn">↻ Rescan this page</button>
+  </div>
+
+  <!-- API Key -->
+  <div class="section-title">Google Safe Browsing API Key</div>
+  <div class="api-section">
+    <div class="api-input-row">
+      <input class="api-input" type="password" id="apiKeyInput" placeholder="AIzaSy…"/>
+      <button class="btn-save" id="saveKeyBtn">Save</button>
+    </div>
+    <div class="api-hint">
+      Get a free key at
+      <a href="https://console.cloud.google.com/apis/library/safebrowsing.googleapis.com" target="_blank">
+        Google Cloud Console
+      </a>
+      → Enable "Safe Browsing API" → Create credentials.
+    </div>
+    <div class="save-msg" id="saveMsg"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-text" id="footerTime">Not yet scanned</div>
+    <div class="powered-by">Powered by <span>Google Safe Browsing</span></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
